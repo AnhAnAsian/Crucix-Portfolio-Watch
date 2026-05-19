@@ -1,0 +1,51 @@
+name: Daily Analysis
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # Weekdays, 21:37 UTC. Runs after US market close and avoids top-of-hour load.
+    - cron: "37 21 * * 1-5"
+
+jobs:
+  daily-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+
+    env:
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+      ACLED_EMAIL: ${{ secrets.ACLED_EMAIL }}
+      ACLED_PASSWORD: ${{ secrets.ACLED_PASSWORD }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      LLM_MODEL: ${{ secrets.LLM_MODEL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run daily analysis
+        run: npm run brief:save
+
+      - name: Upload analysis artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-analysis-${{ github.run_id }}
+          path: runs/*.json
+          if-no-files-found: error
+          retention-days: 30

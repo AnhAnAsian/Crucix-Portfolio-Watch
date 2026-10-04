@@ -40,12 +40,11 @@ jobs:
         run: npm ci
 
       - name: Run daily analysis
-        run: npm run brief:save
-
-      - name: Upload analysis artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: daily-analysis-${{ github.run_id }}
-          path: runs/*.json
-          if-no-files-found: error
-          retention-days: 30
+        run: |
+          # Keep analysis output on the runner; never publish it in logs or artifacts.
+          if npm run brief:save > "${RUNNER_TEMP}/daily-analysis.log" 2>&1; then
+            echo "Daily analysis completed. Detailed output remains private."
+          else
+            echo "::error::Daily analysis failed. Detailed output is withheld for privacy; reproduce locally to diagnose."
+            exit 1
+          fi

@@ -9,6 +9,9 @@ apis/.env
 runs/
 output/
 
+# Personal stock selections
+/watchlist.json
+
 # IDE / Editor
 .vscode/
 .idea/
